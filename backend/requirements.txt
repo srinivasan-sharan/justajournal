@@ -1,3 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 fastapi[standard]
+sqlmodel
+psycopg2-binary
