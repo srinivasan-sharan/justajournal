@@ -19,7 +19,7 @@ class Journal(JournalBase, table=True):
     page_created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class JournalPublic(JournalBase):
-    id: int
+    page_id: int
 
 #new class to validate data
 class JournalCreate(JournalBase):
@@ -30,9 +30,6 @@ class JournalUpdate(JournalBase):
     page_title: str | None = None
     page_content: str | None = None
     page_created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-
-
 
 logger = getLogger(__name__)
 basicConfig(level=INFO)
@@ -100,7 +97,7 @@ def read_journal(session: SessionDep,
     return journals
 
 #return individual journal
-@app.get("/getjournals/{page_id}}", response_model=JournalPublic)
+@app.get("/getjournals/{page_id}", response_model=JournalPublic)
 def read_journal(page_id, session: SessionDep):
     journal = session.get(Journal, page_id)
     if not journal:
@@ -111,7 +108,6 @@ def read_journal(page_id, session: SessionDep):
 @app.delete("/deletejournal/{page_id}")
 def delete_journal(page_id: int, session: SessionDep):
     journal = session.get(Journal, page_id)
-
     if not journal:
         raise HTTPException(status_code=404, detail="Page not found")
     session.delete(journal)
