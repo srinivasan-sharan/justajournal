@@ -91,13 +91,21 @@ def create_journal(journal: Journal, session: SessionDep) -> Journal:
     return db_journal
 
 #return all pages of the journal
-@app.get("/getjournals/")
+@app.get("/getjournals/", response_model=list[JournalPublic])
 def read_journal(session: SessionDep, 
                  offset: int=0, 
                  limit: Annotated[int, Query(le=100)]=100,
                  ) -> list[Journal]:
     journals = session.exec(select(Journal).offset(offset).limit(limit)).all()
     return journals
+
+#return individual journal
+@app.get("/getjournals/{page_id}}", response_model=JournalPublic)
+def read_journal(page_id, session: SessionDep):
+    journal = session.get(Journal, page_id)
+    if not journal:
+        raise HTTPException(status_code=404, detail="journal not found")
+    return journal
 
 #delete individial page of the journal
 @app.delete("/deletejournal/{page_id}")
