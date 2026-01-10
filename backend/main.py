@@ -9,11 +9,16 @@ import os
 from dotenv import load_dotenv
 
 #this is to test out the basic api, will split it post setup
-class Journal(SQLModel, table=True):
-    page_id: str = Field(index=True, primary_key=True)
+class JournalBase(SQLModel):
     page_title: str | None=Field(default=None)
     page_content: str | None=Field(default=None)
+
+#public data model, we only let 
+class Journal(JournalBase, table=True):
+    page_id: int | None = Field(index=True, primary_key=True)
     page_created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 
 logger = getLogger(__name__)
 basicConfig(level=INFO)
@@ -79,3 +84,13 @@ def read_journal(session: SessionDep,
     journals = session.exec(select(Journal).offset(offset).limit(limit)).all()
     return journals
 
+#delete individial page of the journal
+@app.delete("/deletejournal/{page_id}")
+def delete_journal(page_id: int, session: SessionDep):
+    journal = session.get(Journal, page_id)
+
+    if not journal:
+        raise HTTPException(status_code=404, detail="Page not found")
+    session.delete(journal)
+    session.commit()
+    return {"ok": True}
