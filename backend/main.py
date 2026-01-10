@@ -117,3 +117,16 @@ def delete_journal(page_id: int, session: SessionDep):
     session.delete(journal)
     session.commit()
     return {"ok": True}
+
+#update journal
+@app.patch("/journals/{page_id}", response_model=JournalPublic)
+def update_journal(page_id: int, journal: JournalUpdate, session: SessionDep):
+    journal_db = session.get(Journal, page_id)
+    if not journal_db:
+        raise HTTPException(status_code=404, detail="page not found")
+    journal_data = journal.model_dump(exclude_unset=True)
+    journal_db.sqlmodel_update(journal_data)
+    session.add(journal_db)
+    session.commit()
+    session.refresh(journal_db)
+    return journal_db
