@@ -13,10 +13,24 @@ class JournalBase(SQLModel):
     page_title: str | None=Field(default=None)
     page_content: str | None=Field(default=None)
 
-#public data model, we only let 
+#public data model, we let user only interact with the page_title and page_content and nothing else
 class Journal(JournalBase, table=True):
     page_id: int | None = Field(index=True, primary_key=True)
     page_created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class JournalPublic(JournalBase):
+    id: int
+
+#new class to validate data
+class JournalCreate(JournalBase):
+    page_title: str
+    page_content: str
+
+class JournalUpdate(JournalBase):
+    page_title: str | None = None
+    page_content: str | None = None
+    page_created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 
 
@@ -68,12 +82,13 @@ def homepage():
     return {"message": "the db works??"}
 
 #create a new journal
-@app.post("/createjournal/")
+@app.post("/createjournal/", response_model=JournalPublic)
 def create_journal(journal: Journal, session: SessionDep) -> Journal:
-    session.add(journal)
+    db_journal = Journal.model_validate(journal)
+    session.add(db_journal)
     session.commit()
-    session.refresh(journal)
-    return journal
+    session.refresh(db_journal)
+    return db_journal
 
 #return all pages of the journal
 @app.get("/getjournals/")
